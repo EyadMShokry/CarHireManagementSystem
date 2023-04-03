@@ -13,9 +13,9 @@ class CustomerDAO:
         """
         self.db_manager = db_manager
 
-    def add_customer(self, name, email, phone, address):
+    def create_customer(self, name, email, phone, address):
         """
-        Add a new customer to the database.
+        Create a new customer to the database.
 
         Args:
             name (str): The name of the customer.
@@ -31,7 +31,7 @@ class CustomerDAO:
         self.db_manager.execute_query(query, values)
         return self.db_manager.get_cursor().lastrowid
 
-    def get_customer(self, id):
+    def get_customer(self, id) -> Customer:
         """
         Retrieve a customer from the database.
 
@@ -46,7 +46,7 @@ class CustomerDAO:
         result = self.db_manager.execute_query(query, values)
         if result:
             customer = Customer(*result[0])
-            return customer.to_dict()
+            return customer
         else:
             return None
 
