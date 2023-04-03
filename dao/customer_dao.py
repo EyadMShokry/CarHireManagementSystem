@@ -1,4 +1,3 @@
-import mysql.connector
 from models.customer import Customer
 
 
