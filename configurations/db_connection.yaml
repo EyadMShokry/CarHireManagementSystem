@@ -1,0 +1,10 @@
+# These values should be written successfully in order to be able to connect to mysql server.
+server:
+  host: 'localhost'
+  port: 3306
+mysql_configs:
+  user: 'root'
+  password: ''
+  db_name: 'car_hire_system'
+
+# It may be extended in the future with other keys.

@@ -2,11 +2,18 @@ from flask import Flask, jsonify, request
 from services.customer_service import CustomerService
 from dao.customer_dao import CustomerDAO
 from db_manager import DatabaseManager
+from constants import DB_CONNECTION_CONFIGURATION_FILE_PATH
+from utils import load_yaml
 
 app = Flask(__name__)
 
 # Initialize the database manager
-db_manager = DatabaseManager(host='localhost', port=3306, user='root', password='', database='car_hire_system')
+_db_configs = load_yaml(DB_CONNECTION_CONFIGURATION_FILE_PATH)
+db_manager = DatabaseManager(host=_db_configs['server']['host'],
+                             port=_db_configs['server']['port'],
+                             user=_db_configs['mysql_configs']['user'],
+                             password=_db_configs['mysql_configs']['password'],
+                             database=_db_configs['mysql_configs']['db_name'])
 
 # Initialize the customer DAO and service
 customer_dao = CustomerDAO(db_manager)
