@@ -1,2 +1,2 @@
-Flask>=2.2.3
-mysql-connector-python>=8.0.32
+-e db_manager
+PyYAML>=6.0

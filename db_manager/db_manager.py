@@ -1,93 +1,115 @@
 import mysql.connector
-from flask import g
 
 
 class DatabaseManager:
     """
-    A class to manage connections to a MySQL database using Flask.
+    A class to manage connections to a MySQL database.
 
     Attributes:
-        host (str): The hostname of the MySQL server.
+        host (str): The host of the MySQL server.
         port (int): The port number of the MySQL server.
-        user (str): The username to connect to the MySQL server.
-        password (str): The password to connect to the MySQL server.
-        database (str): The name of the database to connect to.
-
+        user (str): The username for the MySQL server.
+        password (str): The password for the MySQL server.
+        database (str): The name of the MySQL database to use.
+        conn (mysql.connector.connection): The active MySQL connection.
+        cursor (mysql.connector.cursor): The cursor for the active MySQL connection.
     """
 
-    def __init__(self, host: str, port: int, user: str, password: str, database: str):
+    def __init__(self, host, port, user, password, database):
         """
-        Initializes the DatabaseManager with the provided configuration.
+        Initializes a new instance of the DatabaseManager class.
 
         Args:
-            host (str): The hostname of the MySQL server.
+            host (str): The host of the MySQL server.
             port (int): The port number of the MySQL server.
-            user (str): The username to connect to the MySQL server.
-            password (str): The password to connect to the MySQL server.
-            database (str): The name of the database to connect to.
-
+            user (str): The username for the MySQL server.
+            password (str): The password for the MySQL server.
+            database (str): The name of the MySQL database to use.
         """
         self.host = host
         self.port = port
         self.user = user
         self.password = password
         self.database = database
+        self.conn = None
+        self.cursor = None
 
-    def get_db(self):
+    def __enter__(self):
         """
-        Returns a connection to the MySQL database, creating a new one if necessary.
+        Creates a new MySQL connection and cursor and returns the manager instance.
 
         Returns:
-            mysql.connector.connection.MySQLConnection: A connection to the MySQL database.
-
+            DatabaseManager: The manager instance.
         """
-        if 'db' not in g:
-            g.db = mysql.connector.connect(
-                host=self.host,
-                port=self.port,
-                user=self.user,
-                password=self.password,
-                database=self.database
-            )
-        return g.db
+        self.conn = mysql.connector.connect(
+            host=self.host,
+            port=self.port,
+            user=self.user,
+            password=self.password,
+            database=self.database,
+        )
+        self.cursor = self.conn.cursor()
+        return self
 
-    def close_db(self, exception=None):
+    def __exit__(self, exc_type, exc_val, exc_tb):
         """
-        Closes the current connection to the MySQL database, if one exists.
+        Commits any pending changes and closes the MySQL connection and cursor.
 
         Args:
-            exception: Any exception that occurred, if applicable.
-
+            exc_type (type): The type of any exception that occurred.
+            exc_val (Exception): The exception that occurred.
+            exc_tb (traceback): The traceback for the exception that occurred.
         """
-        db = g.pop('db', None)
-        if db is not None:
-            db.close()
+        if exc_type is None:
+            self.conn.commit()
+        else:
+            self.conn.rollback()
+        self.cursor.close()
+        self.conn.close()
 
-    def init_app(self, app):
+    def execute(self, query: str, values: tuple = ()):
         """
-        Registers the DatabaseManager with the provided Flask application.
-
-        Args:
-            app: The Flask application to register with.
-
-        """
-        app.teardown_appcontext(self.close_db)
-        app.config['DATABASE'] = self
-
-    def execute_query(self, query: str, values: tuple = ()):
-        """
-        Executes the provided SQL query on the database and returns the result.
+        Executes a SQL query on the active connection and returns the result.
 
         Args:
             query (str): The SQL query to execute.
-            values (tuple): The values to use in the query.
+            values (tuple): Optional arguments to use with the query.
 
         Returns:
-            List[Tuple]: The result of the query.
-
+            list: A list of rows returned by the query.
         """
-        cursor = self.get_db().cursor()
-        cursor.execute(query, values)
-        result = cursor.fetchall()
-        cursor.close()
-        return result
+        self.cursor.execute(query, values)
+        return self.cursor.fetchall()
+
+    def execute_and_commit(self, query: str, values: tuple = ()):
+        """
+        Executes a SQL query on the active connection and commits the changes.
+
+        Args:
+            query (str): The SQL query to execute.
+            values (tuple): Optional arguments to use with the query.
+        """
+        self.cursor.execute(query, values)
+        self.conn.commit()
+
+    def execute_and_return_lastrowid(self, query: str, values: tuple = ()):
+        """
+        Executes a SQL query on the active connection and returns the last inserted row ID.
+
+        Args:
+            query (str): The SQL query to execute.
+            values (tuple): Optional arguments to use with the query.
+
+        Returns:
+            int: The ID of the last inserted row.
+        """
+        self.cursor.execute(query, values)
+        return self.cursor.lastrowid
+
+    # def get_cursor(self):
+    #     """Returns a cursor object for executing queries on the connected database.
+    #
+    #     Returns:
+    #         mysql.connector.cursor_cext.Cursor: A cursor object for executing queries on the connected database.
+    #     """
+    #     return self.conn.cursor()
