@@ -13,23 +13,21 @@ class CustomerDAO:
         """
         self.db_manager = db_manager
 
-    def create_customer(self, name, email, phone, address):
+    def create_customer(self, customer: Customer):
         """
         Create a new customer to the database.
 
         Args:
-            name (str): The name of the customer.
-            email (str): The email of the customer.
-            phone (str): The phone number of the customer.
-            address (str): The address of the customer.
+            customer (Customer): The customer object to create.
 
         Returns:
             int: The ID of the newly created customer record.
         """
-        query = 'INSERT INTO customers (name, email, phone, address) VALUES (%s, %s, %s, %s)'
-        values = (name, email, phone, address)
-        self.db_manager.execute_query(query, values)
-        return self.db_manager.get_cursor().lastrowid
+        query = "INSERT INTO Customer (name, email, phone_number, address) VALUES (%s, %s, %s, %s)"
+        with self.db_manager as manager:
+            return manager.execute_and_return_lastrowid(query,
+                                                        (customer.name, customer.email, customer.phone,
+                                                         customer.address))
 
     def get_customer(self, id) -> Customer:
         """
@@ -41,33 +39,27 @@ class CustomerDAO:
         Returns:
             dict: A dictionary representation of the customer record.
         """
-        query = 'SELECT * FROM customers WHERE id=%s'
-        values = (id)
-        result = self.db_manager.execute_query(query, values)
-        if result:
-            customer = Customer(*result[0])
-            return customer
-        else:
-            return None
+        query = 'SELECT * FROM Customer WHERE id=%s'
+        with self.db_manager as manager:
+            row = manager.execute(query, (id,))
+            if not row:
+                return None
+            return Customer(*row[0])
 
-    def update_customer(self, id, name, email, phone, address):
+    def update_customer(self, customer: Customer):
         """
         Update an existing customer in the database.
 
         Args:
-            id (int): The ID of the customer to update.
-            name (str): The updated name of the customer.
-            email (str): The email of the customer.
-            phone (str): The updated phone number of the customer.
-            address (str): The updated address of the customer.
+            customer (Customer): The customer object to update.
 
         Returns:
             bool: True if the update was successful, False otherwise.
         """
-        query = 'UPDATE customers SET name=%s, email=%s, phone=%s, address=%s WHERE id=%s'
-        values = (name, email, phone, address, id)
-        result = self.db_manager.execute_query(query, values)
-        return result > 0
+        query = 'UPDATE Customer SET name=%s, email=%s, phone_number=%s, address=%s WHERE id=%s'
+        with self.db_manager as manager:
+            result = manager.execute(query, (customer.name, customer.email, customer.phone, customer.address, customer.id))
+            return result
 
     def delete_customer(self, id):
         """
@@ -79,7 +71,6 @@ class CustomerDAO:
         Returns:
             bool: True if the deletion was successful, False otherwise.
         """
-        query = 'DELETE FROM customers WHERE id=%s'
-        values = (id)
-        result = self.db_manager.execute_query(query, values)
-        return result > 0
+        query = 'DELETE FROM Customer WHERE id=%s'
+        with self.db_manager as manager:
+            manager.execute(query, (id,))

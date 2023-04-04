@@ -20,7 +20,7 @@ class CustomerService:
         """
         self.customer_dao = customer_dao
 
-    def create_customer(self, name: str, email: str, phone: str, address: str) -> Customer:
+    def create_customer(self, name: str, email: str, phone: str, address: str):
         """
         Creates a new Customer object and saves it to the database.
 
@@ -34,8 +34,8 @@ class CustomerService:
             Customer: The newly created Customer object.
         """
         customer = Customer(name=name, email=email, phone=phone, address=address)
-        self.customer_dao.create_customer(customer)
-        return customer
+        customer_id = self.customer_dao.create_customer(customer)
+        return customer_id
 
     def get_customer(self, customer_id: int) -> Customer:
         """
@@ -77,13 +77,13 @@ class CustomerService:
         if customer is None:
             raise ValueError(f"No customer found with ID {customer_id}")
 
-        if name is not None:
+        if name is not None and name != "":
             customer.name = name
-        if email is not None:
+        if email is not None and email != "":
             customer.email = email
-        if phone is not None:
+        if phone is not None and phone != "":
             customer.phone = phone
-        if address is not None:
+        if address is not None and address != "":
             customer.address = address
 
         self.customer_dao.update_customer(customer)
@@ -105,12 +105,4 @@ class CustomerService:
             raise ValueError(f"No customer found with ID {customer_id}")
 
         self.customer_dao.delete_customer(customer.id)
-
-    # def get_all_customers(self) -> List[Customer]:
-    #     """
-    #     Retrieves all Customer objects from the database.
-    #
-    #     Returns:
-    #         List[Customer]: A list of all Customer objects.
-    #     """
-    #     return self.customer_dao.get_all_customers()
+        return customer.id

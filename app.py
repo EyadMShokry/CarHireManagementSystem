@@ -30,7 +30,7 @@ def add_customer():
 def get_customer(id):
     customer = customer_service.get_customer(id)
     if customer:
-        return jsonify(customer), 200
+        return jsonify(customer.as_dict()), 200
     else:
         return jsonify({'error': 'Customer not found'}), 404
 
@@ -43,8 +43,10 @@ def update_customer(id):
     email = data['email']
     phone = data['phone']
     address = data['address']
-    if customer_service.update_customer(id, name, email, phone, address):
-        return '', 204
+
+    customer = customer_service.update_customer(id, name, email, phone, address)
+    if customer:
+        return jsonify(customer.as_dict()), 202
     else:
         return jsonify({'error': 'Customer not found'}), 404
 
@@ -52,30 +54,18 @@ def update_customer(id):
 # Endpoint to delete a customer by ID
 @app.route('/customers/<int:id>', methods=['DELETE'])
 def delete_customer(id):
-    if customer_service.delete_customer(id):
-        return '', 204
+    customer_id = customer_service.delete_customer(id)
+    if customer_id:
+        return jsonify({'customer_id': customer_id}), 200
     else:
         return jsonify({'error': 'Customer not found'}), 404
 
 
+# Index
+@app.route('/')
+def index():
+    return 'Flask Root'
+
+
 if __name__ == '__main__':
     app.run(debug=True)
-
-
-
-
-
-# from flask import Flask
-# from db_manager import DatabaseManager
-#
-# app = Flask(__name__)
-#
-# # Set up the database manager
-# db_manager = DatabaseManager(host='localhost', port=3306, user='root', password='', database='car_hire_system')
-# db_manager.init_app(app)
-#
-# # Create an application context
-# with app.app_context():
-#     # Execute a query
-#     result = db_manager.execute_query("SELECT * FROM Customer")
-#     print(result)

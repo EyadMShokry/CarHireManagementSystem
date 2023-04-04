@@ -31,3 +31,17 @@ class Customer:
         self.email = email
         self.phone = phone
         self.address = address
+
+    def as_dict(self):
+        """Returns a dictionary representation of the customer object.
+
+        Returns:
+            dict: A dictionary containing the customer's id, name, email, and phone.
+        """
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "address": self.address
+        }
