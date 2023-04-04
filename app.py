@@ -23,14 +23,16 @@ customer_service = CustomerService(customer_dao)
 # Endpoint to add a new customer
 @app.route('/customers', methods=['POST'])
 def add_customer():
-    data = request.get_json()
-    name = data['name']
-    email = data['email']
-    phone = data['phone']
-    address = data['address']
-    customer_id = customer_service.create_customer(name, email, phone, address)
-    return jsonify({'customer_id': customer_id}), 201
-
+    try:
+        data = request.get_json()
+        name = data['name']
+        email = data['email']
+        phone = data['phone']
+        address = data['address']
+        customer_id = customer_service.create_customer(name, email, phone, address)
+        return jsonify({'customer_id': customer_id}), 201
+    except (KeyError, TypeError):
+        return jsonify({'error': 'Invalid JSON data'}), 400
 
 # Endpoint to get a customer by ID
 @app.route('/customers/<int:id>', methods=['GET'])
@@ -45,17 +47,20 @@ def get_customer(id):
 # Endpoint to update a customer by ID
 @app.route('/customers/<int:id>', methods=['PUT'])
 def update_customer(id):
-    data = request.get_json()
-    name = data['name']
-    email = data['email']
-    phone = data['phone']
-    address = data['address']
+    try:
+        data = request.get_json()
+        name = data['name']
+        email = data['email']
+        phone = data['phone']
+        address = data['address']
 
-    customer = customer_service.update_customer(id, name, email, phone, address)
-    if customer:
-        return jsonify(customer.as_dict()), 202
-    else:
-        return jsonify({'error': 'Customer not found'}), 404
+        customer = customer_service.update_customer(id, name, email, phone, address)
+        if customer:
+            return jsonify(customer.as_dict()), 202
+        else:
+            return jsonify({'error': 'Customer not found'}), 404
+    except (KeyError, TypeError):
+        return jsonify({'error': 'Invalid JSON data'}), 400
 
 
 # Endpoint to delete a customer by ID

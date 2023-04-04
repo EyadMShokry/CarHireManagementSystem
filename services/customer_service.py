@@ -37,7 +37,7 @@ class CustomerService:
         customer_id = self.customer_dao.create_customer(customer)
         return customer_id
 
-    def get_customer(self, customer_id: int) -> Customer:
+    def get_customer(self, customer_id: int):
         """
         Retrieves a Customer object with the specified ID from the database.
 
@@ -46,13 +46,10 @@ class CustomerService:
 
         Returns:
             Customer: The Customer object with the specified ID.
-
-        Raises:
-            ValueError: If no customer is found with the specified ID.
         """
         customer = self.customer_dao.get_customer(customer_id)
         if customer is None:
-            raise ValueError(f"No customer found with ID {customer_id}")
+            return
         return customer
 
     def update_customer(self, customer_id: int, name: str = None, email: str = None,
@@ -102,7 +99,7 @@ class CustomerService:
         """
         customer = self.customer_dao.get_customer(customer_id)
         if customer is None:
-            raise ValueError(f"No customer found with ID {customer_id}")
+            return
 
         self.customer_dao.delete_customer(customer.id)
         return customer.id
